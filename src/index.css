@@ -1,0 +1,147 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Rose/Coral Women Safety Light Mode */
+    --background: 0 0% 98%;
+    --foreground: 350 15% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 350 15% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 350 15% 15%;
+
+    /* Rose/Coral Primary */
+    --primary: 346 77% 55%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Emergency Red */
+    --emergency: 0 85% 60%;
+    --emergency-foreground: 0 0% 100%;
+    
+    /* Teal Safe */
+    --safe: 168 70% 42%;
+    --safe-foreground: 0 0% 100%;
+
+    /* Warning Amber */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Info Blue */
+    --info: 200 80% 55%;
+    --info-foreground: 0 0% 100%;
+
+    --secondary: 346 20% 96%;
+    --secondary-foreground: 346 30% 20%;
+
+    --muted: 340 10% 96%;
+    --muted-foreground: 340 10% 50%;
+
+    --accent: 346 20% 95%;
+    --accent-foreground: 346 60% 50%;
+
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 340 15% 91%;
+    --input: 340 15% 91%;
+    --ring: 346 77% 55%;
+
+    --radius: 1rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 346 77% 55%;
+  }
+
+  .dark {
+    /* Premium Dark Mode */
+    --background: 340 20% 8%;
+    --foreground: 340 10% 95%;
+
+    --card: 340 20% 12%;
+    --card-foreground: 340 10% 95%;
+
+    --popover: 340 20% 12%;
+    --popover-foreground: 340 10% 95%;
+
+    --primary: 346 80% 62%;
+    --primary-foreground: 0 0% 100%;
+    
+    --emergency: 0 85% 65%;
+    --emergency-foreground: 0 0% 100%;
+    
+    --safe: 168 70% 48%;
+    --safe-foreground: 0 0% 100%;
+
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 200 80% 60%;
+    --info-foreground: 0 0% 100%;
+
+    --secondary: 340 15% 16%;
+    --secondary-foreground: 340 10% 95%;
+
+    --muted: 340 15% 16%;
+    --muted-foreground: 340 10% 65%;
+
+    --accent: 340 15% 16%;
+    --accent-foreground: 346 80% 62%;
+
+    --destructive: 0 85% 65%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 340 15% 20%;
+    --input: 340 15% 20%;
+    --ring: 346 80% 62%;
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 346 80% 62%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 346 80% 62%;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-white/60 backdrop-blur-xl border border-white/30 shadow-xl;
+  }
+  .dark .glass-panel {
+    @apply bg-white/5 border-white/10;
+  }
+
+  .gradient-card {
+    @apply relative overflow-hidden rounded-2xl transition-all duration-300;
+    @apply hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .feature-icon-wrapper {
+    @apply p-3.5 rounded-2xl w-fit transition-transform duration-300 group-hover:scale-110;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
