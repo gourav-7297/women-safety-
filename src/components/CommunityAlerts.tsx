@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 interface CommunityAlertsProps {
     onBack: () => void;
@@ -21,47 +23,109 @@ interface Alert {
 
 export const CommunityAlerts = ({ onBack }: CommunityAlertsProps) => {
     const [activeFilter, setActiveFilter] = useState("all");
+    const [alerts, setAlerts] = useState<Alert[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Mock data - will be replaced with Supabase data in Phase 3
-    const [alerts, setAlerts] = useState<Alert[]>([
-        {
-            id: "1",
-            type: "Harassment",
-            location: "Central Park West Entrance",
-            time: "10 mins ago",
-            description: "Group of men catcalling and following women near the gate.",
-            votes: 12,
-            comments: 3
-        },
-        {
-            id: "2",
-            type: "Poor Lighting",
-            location: "5th Avenue Subway Station",
-            time: "25 mins ago",
-            description: "Street lights are out in the pedestrian tunnel. Very dark.",
-            votes: 8,
-            comments: 1
-        },
-        {
-            id: "3",
-            type: "Suspicious Activity",
-            location: "Oak Street Parking Lot",
-            time: "1 hour ago",
-            description: "Unmarked van parked for 2 hours with engine running.",
-            votes: 5,
-            comments: 0
+    useEffect(() => {
+        fetchAlerts();
+
+        // Subscribe to real-time changes
+        const subscription = supabase
+            .channel('alerts-channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, payload => {
+                console.log('Change received!', payload);
+                fetchAlerts(); // Re-fetch to keep it simple, or update state optimistically
+            })
+            .subscribe();
+
+        return () => {
+            subscription.unsubscribe();
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const fetchAlerts = async () => {
+        setIsLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('alerts')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(20);
+
+            if (error) throw error;
+
+            if (data) {
+                const formattedAlerts: Alert[] = data.map(item => ({
+                    id: item.id,
+                    type: item.type,
+                    location: item.location_name,
+                    time: new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    description: item.description,
+                    votes: item.upvotes || 0,
+                    comments: item.comments || 0
+                }));
+                setAlerts(formattedAlerts);
+            }
+        } catch (error) {
+            console.error("Error fetching alerts:", error);
+            // Fallback for demo purposes if Supabase fails
+            if (alerts.length === 0) {
+                toast.error("Could not load live alerts");
+            }
+        } finally {
+            setIsLoading(false);
         }
-    ]);
+    };
 
-    const handleUpvote = (id: string) => {
+    const handleUpvote = async (id: string) => {
+        // Optimistic update
         setAlerts(prev => prev.map(alert =>
             alert.id === id ? { ...alert, votes: alert.votes + 1 } : alert
         ));
-        toast.success("Alert Upvoted", { description: "Thanks for validating this report" });
+
+        try {
+            const currentAlert = alerts.find(a => a.id === id);
+            if (currentAlert && id.length > 5) { // basic check if it's a UUID and not a mock ID
+                await supabase
+                    .from('alerts')
+                    .update({ upvotes: currentAlert.votes + 1 })
+                    .eq('id', id);
+            }
+            toast.success("Alert Upvoted", { description: "Thanks for validating this report" });
+        } catch (error) {
+            console.error("Error upvoting:", error);
+        }
     };
 
-    const handleReport = () => {
-        toast.success("Report Submitted", { description: "Your alert has been broadcast to nearby users" });
+    const handleReport = async () => {
+        const types = ["Harassment", "Poor Lighting", "Suspicious Activity"];
+        const randomType = types[Math.floor(Math.random() * types.length)];
+
+        toast.loading("Submitting report...", { id: 'report' });
+
+        try {
+            const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+                if (!navigator.geolocation) reject(new Error("No geolocation"));
+                navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
+            });
+
+            const { error } = await supabase
+                .from('alerts')
+                .insert([{
+                    type: randomType,
+                    location_name: "Current Location",
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                    description: "User reported incident nearby",
+                }]);
+
+            if (error) throw error;
+            toast.success("Report Submitted", { id: 'report', description: "Your alert has been broadcast to nearby users" });
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to submit report", { id: 'report' });
+        }
     };
 
     return (
@@ -91,8 +155,8 @@ export const CommunityAlerts = ({ onBack }: CommunityAlertsProps) => {
                             key={filter}
                             onClick={() => setActiveFilter(filter.toLowerCase())}
                             className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${activeFilter === filter.toLowerCase()
-                                    ? "bg-primary text-white shadow-md shadow-primary/20"
-                                    : "bg-white dark:bg-card border border-border/50 text-muted-foreground hover:bg-accent"
+                                ? "bg-primary text-white shadow-md shadow-primary/20"
+                                : "bg-white dark:bg-card border border-border/50 text-muted-foreground hover:bg-accent"
                                 }`}
                         >
                             {filter}
@@ -134,22 +198,36 @@ export const CommunityAlerts = ({ onBack }: CommunityAlertsProps) => {
                                 <div className="flex gap-4">
                                     <button
                                         onClick={() => handleUpvote(alert.id)}
-                                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors"
+                                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                                     >
                                         <ThumbsUp className="w-3.5 h-3.5" />
                                         {alert.votes} Helpful
                                     </button>
-                                    <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors">
+                                    <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors cursor-pointer">
                                         <MessageCircle className="w-3.5 h-3.5" />
                                         {alert.comments} Comments
                                     </button>
                                 </div>
-                                <button className="text-xs font-bold text-primary hover:underline">
+                                <button className="text-xs font-bold text-primary hover:underline cursor-pointer">
                                     View on Map
                                 </button>
                             </div>
                         </Card>
                     ))}
+
+                    {alerts.length === 0 && !isLoading && (
+                        <div className="text-center py-10 text-muted-foreground">
+                            <MapPin className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                            <p>No recent alerts in your area.</p>
+                            <p className="text-sm">Stay safe!</p>
+                        </div>
+                    )}
+
+                    {isLoading && (
+                        <div className="flex justify-center py-10">
+                            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        </div>
+                    )}
                 </div>
 
                 <div className="p-4 bg-gradient-to-br from-primary/5 to-safe/5 rounded-2xl border border-primary/10 text-center">
