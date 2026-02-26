@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Shield, MapPin, Users, User, Bell, LogOut, Phone, Clock, Zap, Mic, MicOff, Heart, AlertTriangle, Car, Footprints, BookOpen, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SOSButton } from "@/components/SOSButton";
 import { EmergencyMode } from "@/components/EmergencyMode";
@@ -16,7 +17,7 @@ import { CheckInTimer } from "@/components/CheckInTimer";
 import { LocationShareCard } from "@/components/LocationShareCard";
 import { AlertHistoryCard } from "@/components/AlertHistoryCard";
 import { useVoiceActivation } from "@/hooks/useVoiceActivation";
-import { useShakeDetection } from "@/hooks/useShakeDetection";
+import { useContacts } from "@/hooks/useContacts";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -34,8 +35,11 @@ const Home = () => {
   const [checkInActive, setCheckInActive] = useState(false);
   const [locationSharing, setLocationSharing] = useState(false);
   const [voiceActivationEnabled, setVoiceActivationEnabled] = useState(false);
-  const [shakeEnabled, setShakeEnabled] = useState(true);
   const [greeting, setGreeting] = useState("Hello");
+  const { contacts, addContact, removeContact } = useContacts();
+  const [showAddContact, setShowAddContact] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newPhone, setNewPhone] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,21 +61,6 @@ const Home = () => {
     keywords: ['emergency', 'help', 'sos'],
     isEnabled: voiceActivationEnabled
   });
-
-  const { isSupported: shakeSupported } = useShakeDetection(handleSOSActivate, {
-    isEnabled: shakeEnabled,
-    threshold: 15, // Sensitivity
-    timeout: 2000 // Debounce 2s
-  });
-
-  useEffect(() => {
-    if (shakeEnabled && shakeSupported) {
-      toast.info("Shake Detection Active", {
-        description: "Shake your device firmly to trigger SOS",
-        duration: 3000,
-      });
-    }
-  }, [shakeEnabled, shakeSupported]);
 
   const handleDeactivate = () => {
     setIsEmergencyMode(false);
@@ -267,19 +256,15 @@ const Home = () => {
               {/* Status & Voice */}
               <div className="grid grid-cols-2 gap-4">
                 <div
-                  onClick={() => setShakeEnabled(!shakeEnabled)}
-                  className={`p-4 rounded-2xl shadow-sm border transition-all cursor-pointer flex flex-col gap-2 ${shakeEnabled
-                    ? "bg-white dark:bg-card border-safe/50 hover:border-safe"
-                    : "bg-white dark:bg-card border-border/50 opacity-80"
-                    }`}
+                  className="p-4 rounded-2xl shadow-sm border transition-all flex flex-col gap-2 bg-white dark:bg-card border-safe/50 hover:border-safe"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Status</span>
-                    <div className={`w-2 h-2 rounded-full ${shakeEnabled ? "bg-safe animate-pulse" : "bg-muted"}`} />
+                    <div className="w-2 h-2 rounded-full bg-safe animate-pulse" />
                   </div>
                   <div>
-                    <p className="font-semibold text-foreground leading-tight">{shakeEnabled ? "Shake On" : "Shake Off"}</p>
-                    <p className="text-[10px] text-muted-foreground">{shakeEnabled ? "Shake to SOS" : "Tracking Off"}</p>
+                    <p className="font-semibold text-foreground leading-tight">Shake On</p>
+                    <p className="text-[10px] text-muted-foreground">Shake to SOS (Global)</p>
                   </div>
                 </div>
 
@@ -353,22 +338,66 @@ const Home = () => {
           {activeTab === "contacts" && (
             <div className="animate-fade-in space-y-6">
               <h2 className="text-2xl font-bold">Trusted Contacts</h2>
+
+              {showAddContact && (
+                <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border/50 space-y-3">
+                  <Input
+                    placeholder="Name (e.g., Mom)"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Phone Number"
+                    type="tel"
+                    value={newPhone}
+                    onChange={(e) => setNewPhone(e.target.value)}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1"
+                      onClick={() => {
+                        if (newName && newPhone) {
+                          addContact({ name: newName, phone: newPhone });
+                          setNewName("");
+                          setNewPhone("");
+                          setShowAddContact(false);
+                          toast.success("Contact added!");
+                        } else {
+                          toast.error("Please enter a name and phone number");
+                        }
+                      }}
+                    >Save</Button>
+                    <Button variant="outline" onClick={() => setShowAddContact(false)}>Cancel</Button>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-3">
-                {[1, 2, 3].map((_, i) => (
-                  <div key={i} className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border/50 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                      M
+                {contacts.length === 0 && !showAddContact && (
+                  <p className="text-center text-muted-foreground py-8">No trusted contacts added yet. Add one to enable automatic SOS calling.</p>
+                )}
+
+                {contacts.map((contact) => (
+                  <div key={contact.id} className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border/50 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold uppercase">
+                      {contact.name.charAt(0)}
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold">Mom</h3>
-                      <p className="text-xs text-muted-foreground">+91 98765 43210</p>
+                      <h3 className="font-bold">{contact.name}</h3>
+                      <p className="text-xs text-muted-foreground">{contact.phone}</p>
                     </div>
-                    <Button size="sm" variant="outline">Call</Button>
+                    <Button size="sm" variant="destructive" onClick={() => removeContact(contact.id)}>Remove</Button>
                   </div>
                 ))}
-                <Button className="w-full h-12 rounded-xl border-dashed border-2 border-border bg-transparent text-muted-foreground hover:bg-primary/5 hover:border-primary/50">
-                  + Add New Contact
-                </Button>
+
+                {!showAddContact && (
+                  <Button
+                    className="w-full h-12 rounded-xl border-dashed border-2 border-border bg-transparent text-muted-foreground hover:bg-primary/5 hover:border-primary/50"
+                    onClick={() => setShowAddContact(true)}
+                  >
+                    + Add New Contact
+                  </Button>
+                )}
               </div>
             </div>
           )}

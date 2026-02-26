@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { CheckInTimer } from "@/components/CheckInTimer";
+import { supabase } from "@/lib/supabase";
 
 interface CabSafetyTrackerProps {
     onBack: () => void;
@@ -19,42 +20,114 @@ export const CabSafetyTracker = ({ onBack }: CabSafetyTrackerProps) => {
     const [estimatedTime, setEstimatedTime] = useState("");
     const [showTimer, setShowTimer] = useState(false);
 
-    // Mock tracking
-    useEffect(() => {
-        let interval: NodeJS.Timeout;
-        if (isActive) {
-            interval = setInterval(() => {
-                // Simulate tracking updates
-                console.log("Tracking active...");
-            }, 5000);
-        }
-        return () => clearInterval(interval);
-    }, [isActive]);
+    const [sessionId, setSessionId] = useState<string | null>(null);
+    const [watchId, setWatchId] = useState<number | null>(null);
+    const [isStarting, setIsStarting] = useState(false);
 
-    const handleStartRide = () => {
+    useEffect(() => {
+        return () => {
+            if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+        };
+    }, [watchId]);
+
+    const handleStartRide = async () => {
         if (!vehicleNo || !destination) {
             toast.error("Missing Details", { description: "Please enter vehicle number and destination" });
             return;
         }
-        setIsActive(true);
-        setShowTimer(true);
-        toast.success("Ride Tracking Started", { description: "Sharing live details with trusted contacts" });
+
+        if (!navigator.geolocation) {
+            toast.error("Error", { description: "Geolocation is not supported by your browser" });
+            return;
+        }
+
+        setIsStarting(true);
+        toast.loading("Securing ride...", { id: 'cab-start' });
+
+        try {
+            const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
+            });
+
+            const { data, error } = await supabase
+                .from('safety_sessions')
+                .insert([{
+                    type: 'cab_ride',
+                    destination: destination,
+                    vehicle_no: vehicleNo,
+                    last_known_lat: position.coords.latitude,
+                    last_known_lng: position.coords.longitude,
+                    estimated_duration_mins: parseInt(estimatedTime) || 30,
+                    status: 'active'
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            setSessionId(data.id);
+            setIsActive(true);
+            setShowTimer(true);
+
+            const id = navigator.geolocation.watchPosition(
+                async (pos) => {
+                    await supabase
+                        .from('safety_sessions')
+                        .update({
+                            last_known_lat: pos.coords.latitude,
+                            last_known_lng: pos.coords.longitude,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', data.id);
+                },
+                (err) => console.error("GPS error", err),
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+
+            setWatchId(id);
+            toast.success("Ride Tracking Started", { id: 'cab-start', description: "Sharing live details with trusted contacts" });
+
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to start cab tracker", { id: 'cab-start' });
+        } finally {
+            setIsStarting(false);
+        }
     };
 
-    const handleEndRide = () => {
+    const handleEndRide = async () => {
+        if (watchId !== null) {
+            navigator.geolocation.clearWatch(watchId);
+            setWatchId(null);
+        }
+
+        if (sessionId) {
+            try {
+                await supabase
+                    .from('safety_sessions')
+                    .update({ status: 'ended' })
+                    .eq('id', sessionId);
+            } catch (error) {
+                console.error("Error ending cab ride", error);
+            }
+        }
+
         setIsActive(false);
         setShowTimer(false);
+        setSessionId(null);
         toast.success("Ride Ended", { description: "You've arrived safely" });
     };
 
     const shareRideDetails = () => {
+        const url = sessionId ? `${window.location.origin}/share/${sessionId}` : window.location.href;
         if (navigator.share) {
             navigator.share({
                 title: 'Track my ride',
                 text: `I'm in a cab (${vehicleNo}) driven by ${driverName || 'Unknown'}. Going to ${destination}. Track me here:`,
-                url: window.location.href
+                url: url
             }).catch(console.error);
         } else {
+            navigator.clipboard.writeText(url);
             toast.info("Link Copied", { description: "Ride tracking link copied to clipboard" });
         }
     };
@@ -136,9 +209,10 @@ export const CabSafetyTracker = ({ onBack }: CabSafetyTrackerProps) => {
 
                             <Button
                                 onClick={handleStartRide}
+                                disabled={isStarting}
                                 className="w-full h-14 mt-8 rounded-xl text-lg font-bold shadow-lg shadow-primary/20 bg-gradient-to-r from-primary to-primary/80 hover:to-primary"
                             >
-                                Start Safety Tracking
+                                {isStarting ? "Starting Tracking..." : "Start Safety Tracking"}
                             </Button>
                         </div>
 

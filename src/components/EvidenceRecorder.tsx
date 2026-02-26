@@ -3,6 +3,7 @@ import { Mic, Square, Video, VideoOff, Save, Trash2, ChevronLeft, Play, Pause } 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 interface EvidenceRecorderProps {
     onBack: () => void;
@@ -28,11 +29,37 @@ export const EvidenceRecorder = ({ onBack }: EvidenceRecorderProps) => {
     const videoPreviewRef = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
+        fetchRecordings();
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
             stopMediaStream();
         };
     }, []);
+
+    const fetchRecordings = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('evidence')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (data) {
+                const formattedRecordings: Recording[] = data.map(record => ({
+                    id: record.id,
+                    type: record.type,
+                    url: record.public_url,
+                    timestamp: new Date(record.created_at),
+                    duration: record.duration
+                }));
+                setRecordings(formattedRecordings);
+            }
+        } catch (error) {
+            console.error("Error fetching recordings:", error);
+            toast.error("Failed to load past recordings");
+        }
+    };
 
     const stopMediaStream = () => {
         if (videoPreviewRef.current && videoPreviewRef.current.srcObject) {
@@ -63,19 +90,60 @@ export const EvidenceRecorder = ({ onBack }: EvidenceRecorderProps) => {
                 }
             };
 
-            mediaRecorder.onstop = () => {
+            mediaRecorder.onstop = async () => {
                 const blob = new Blob(chunksRef.current, { type: mode === 'video' ? 'video/webm' : 'audio/webm' });
-                const url = URL.createObjectURL(blob);
-                const newRecording: Recording = {
-                    id: Date.now().toString(),
-                    type: mode,
-                    url,
-                    timestamp: new Date(),
-                    duration: duration
-                };
-                setRecordings(prev => [newRecording, ...prev]);
-                toast.success("Evidence Saved", { description: "Recording stored locally" });
-                stopMediaStream();
+                const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${mode === 'video' ? 'webm' : 'webm'}`;
+
+                toast.loading("Uploading evidence...", { id: "upload-toast" });
+
+                try {
+                    // Upload to storage
+                    const { error: uploadError } = await supabase.storage
+                        .from('evidence')
+                        .upload(fileName, blob, {
+                            cacheControl: '3600',
+                            upsert: false
+                        });
+
+                    if (uploadError) throw uploadError;
+
+                    // Get public URL
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('evidence')
+                        .getPublicUrl(fileName);
+
+                    // Save to database
+                    const { data: dbData, error: dbError } = await supabase
+                        .from('evidence')
+                        .insert([
+                            {
+                                type: mode,
+                                duration: duration,
+                                file_path: fileName,
+                                public_url: publicUrl
+                            }
+                        ])
+                        .select()
+                        .single();
+
+                    if (dbError) throw dbError;
+
+                    const newRecording: Recording = {
+                        id: dbData.id,
+                        type: mode,
+                        url: publicUrl,
+                        timestamp: new Date(dbData.created_at),
+                        duration: duration
+                    };
+
+                    setRecordings(prev => [newRecording, ...prev]);
+                    toast.success("Evidence Secured in Cloud", { id: "upload-toast", description: "Recording uploaded safely" });
+                } catch (error) {
+                    console.error("Error saving evidence:", error);
+                    toast.error("Upload Failed", { id: "upload-toast", description: "Failed to save evidence to cloud" });
+                } finally {
+                    stopMediaStream();
+                }
             };
 
             mediaRecorder.start();
@@ -107,9 +175,21 @@ export const EvidenceRecorder = ({ onBack }: EvidenceRecorderProps) => {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const deleteRecording = (id: string) => {
-        setRecordings(prev => prev.filter(rec => rec.id !== id));
-        toast.info("Recording Deleted");
+    const deleteRecording = async (id: string) => {
+        try {
+            const { error } = await supabase
+                .from('evidence')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            setRecordings(prev => prev.filter(rec => rec.id !== id));
+            toast.info("Recording Deleted");
+        } catch (error) {
+            console.error("Error deleting evidence:", error);
+            toast.error("Failed to delete recording");
+        }
     };
 
     return (

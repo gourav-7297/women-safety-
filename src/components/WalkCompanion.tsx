@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { CheckInTimer } from "@/components/CheckInTimer";
+import { supabase } from "@/lib/supabase";
 
 interface WalkCompanionProps {
     onBack: () => void;
@@ -15,18 +16,98 @@ export const WalkCompanion = ({ onBack }: WalkCompanionProps) => {
     const [destination, setDestination] = useState("");
     const [duration, setDuration] = useState("");
     const [selectedContact, setSelectedContact] = useState<number | null>(null);
+    const [sessionId, setSessionId] = useState<string | null>(null);
+    const [watchId, setWatchId] = useState<number | null>(null);
+    const [isStarting, setIsStarting] = useState(false);
 
-    const handleStartWalk = () => {
+    useEffect(() => {
+        return () => {
+            if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+        };
+    }, [watchId]);
+
+    const handleStartWalk = async () => {
         if (!destination || !selectedContact) {
             toast.error("Missing Info", { description: "Please select a contact and destination" });
             return;
         }
-        setIsActive(true);
-        toast.success("Walk Companion Active", { description: "Your contact can now see your live location" });
+
+        if (!navigator.geolocation) {
+            toast.error("Error", { description: "Geolocation is not supported by your browser" });
+            return;
+        }
+
+        setIsStarting(true);
+        toast.loading("Starting Walk Companion...", { id: 'walk-start' });
+
+        try {
+            const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
+            });
+
+            const { data, error } = await supabase
+                .from('safety_sessions')
+                .insert([{
+                    type: 'walk_companion',
+                    destination: destination,
+                    last_known_lat: position.coords.latitude,
+                    last_known_lng: position.coords.longitude,
+                    estimated_duration_mins: parseInt(duration) || 15,
+                    status: 'active'
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            setSessionId(data.id);
+            setIsActive(true);
+
+            const id = navigator.geolocation.watchPosition(
+                async (pos) => {
+                    await supabase
+                        .from('safety_sessions')
+                        .update({
+                            last_known_lat: pos.coords.latitude,
+                            last_known_lng: pos.coords.longitude,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', data.id);
+                },
+                (err) => console.error("GPS error", err),
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+
+            setWatchId(id);
+            toast.success("Walk Companion Active", { id: 'walk-start', description: "Your contact can now see your live location" });
+
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to start walk tracker", { id: 'walk-start' });
+        } finally {
+            setIsStarting(false);
+        }
     };
 
-    const handleEndWalk = () => {
+    const handleEndWalk = async () => {
+        if (watchId !== null) {
+            navigator.geolocation.clearWatch(watchId);
+            setWatchId(null);
+        }
+
+        if (sessionId) {
+            try {
+                await supabase
+                    .from('safety_sessions')
+                    .update({ status: 'ended' })
+                    .eq('id', sessionId);
+            } catch (error) {
+                console.error("Error ending walk", error);
+            }
+        }
+
         setIsActive(false);
+        setSessionId(null);
         toast.success("Walk Ended", { description: "Glad you arrived safely!" });
     };
 
@@ -94,8 +175,8 @@ export const WalkCompanion = ({ onBack }: WalkCompanionProps) => {
                                             key={contact}
                                             onClick={() => setSelectedContact(contact)}
                                             className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex flex-col items-center gap-2 ${selectedContact === contact
-                                                    ? "border-primary bg-primary/5"
-                                                    : "border-transparent bg-muted/50 hover:bg-muted"
+                                                ? "border-primary bg-primary/5"
+                                                : "border-transparent bg-muted/50 hover:bg-muted"
                                                 }`}
                                         >
                                             <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm">
@@ -111,9 +192,10 @@ export const WalkCompanion = ({ onBack }: WalkCompanionProps) => {
 
                             <Button
                                 onClick={handleStartWalk}
+                                disabled={isStarting}
                                 className="w-full h-14 rounded-xl text-lg font-bold shadow-lg shadow-green-500/20 bg-gradient-to-r from-green-500 to-emerald-600 hover:to-green-500 text-white"
                             >
-                                Start Walking
+                                {isStarting ? "Starting..." : "Start Walking"}
                             </Button>
                         </div>
                     </div>
@@ -135,8 +217,11 @@ export const WalkCompanion = ({ onBack }: WalkCompanionProps) => {
                                     <div className="w-4 h-4 bg-primary rounded-full border-2 border-white shadow-lg" />
                                 </div>
                                 <span className="bg-white/80 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-                                    Sharing Location
+                                    Sharing GPS to Cloud
                                 </span>
+                            </div>
+                            <div className="absolute bottom-2 right-2 flex gap-1 items-center bg-background/80 px-2 py-1 rounded-full text-[10px] font-mono">
+                                <MapPin className="w-3 h-3 text-primary" /> LIVE
                             </div>
                         </div>
 
