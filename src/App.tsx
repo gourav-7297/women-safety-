@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { TrustedContact } from "@/hooks/useContacts";
 import { registerPlugin } from '@capacitor/core';
+import { AuthProvider } from "@/contexts/AuthContext";
+import { LiveTrackingView } from "@/pages/LiveTrackingView";
 
 const DirectCall = registerPlugin<{ call(options: { number: string }): Promise<void> }>('DirectCall');
 const DirectSms = registerPlugin<{ send(options: { numbers: string[], message: string }): Promise<void> }>('DirectSms');
@@ -88,6 +90,7 @@ const AppContent = () => {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/home" element={<Index />} />
+        <Route path="/share/:id" element={<LiveTrackingView />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -101,7 +104,9 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <AppContent />
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

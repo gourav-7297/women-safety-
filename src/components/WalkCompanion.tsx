@@ -48,7 +48,7 @@ export const WalkCompanion = ({ onBack }: WalkCompanionProps) => {
             const { data, error } = await supabase
                 .from('safety_sessions')
                 .insert([{
-                    type: 'walk_companion',
+                    type: 'walk',
                     destination: destination,
                     last_known_lat: position.coords.latitude,
                     last_known_lng: position.coords.longitude,

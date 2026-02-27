@@ -25,7 +25,7 @@ export const SOSButton = ({ onActivate, isEmergencyMode }: SOSButtonProps) => {
 
   const startHold = () => {
     if (isEmergencyMode) return;
-    
+
     setIsHolding(true);
     setProgress(0);
 
@@ -56,8 +56,8 @@ export const SOSButton = ({ onActivate, isEmergencyMode }: SOSButtonProps) => {
     <div className="relative flex flex-col items-center gap-4">
       <div
         className={cn(
-          "relative w-64 h-64 rounded-full transition-all duration-300",
-          isEmergencyMode && "animate-pulse"
+          "relative w-64 h-64 rounded-full transition-all duration-500 hover:scale-[1.02]",
+          isEmergencyMode ? "animate-pulse" : "animate-pulse-glow"
         )}
       >
         {/* Outer glow ring */}
@@ -68,7 +68,7 @@ export const SOSButton = ({ onActivate, isEmergencyMode }: SOSButtonProps) => {
             isEmergencyMode && "bg-emergency/30"
           )}
         />
-        
+
         {/* Progress ring */}
         <svg
           className="absolute inset-0 w-full h-full -rotate-90"
@@ -114,11 +114,11 @@ export const SOSButton = ({ onActivate, isEmergencyMode }: SOSButtonProps) => {
             "absolute inset-2 w-[calc(100%-1rem)] h-[calc(100%-1rem)] rounded-full",
             "flex flex-col items-center justify-center gap-3",
             "text-2xl font-bold tracking-wide",
-            "shadow-2xl transition-all duration-300",
+            "shadow-2xl transition-all duration-500",
             "touch-none select-none",
             isEmergencyMode
-              ? "bg-emergency hover:bg-emergency text-emergency-foreground cursor-default"
-              : "bg-primary hover:bg-primary/90 text-primary-foreground active:scale-95"
+              ? "bg-emergency hover:bg-emergency text-emergency-foreground cursor-default shadow-[0_0_60px_rgba(255,50,50,0.6)]"
+              : "bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground active:scale-95 shadow-[0_0_40px_rgba(220,50,100,0.4)] border border-white/20"
           )}
         >
           {isEmergencyMode ? (

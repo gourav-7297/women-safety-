@@ -3,6 +3,9 @@ import { AlertTriangle, MapPin, ThumbsUp, MessageCircle, ChevronLeft, Plus } fro
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
@@ -25,6 +28,10 @@ export const CommunityAlerts = ({ onBack }: CommunityAlertsProps) => {
     const [activeFilter, setActiveFilter] = useState("all");
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isReportOpen, setIsReportOpen] = useState(false);
+    const [reportType, setReportType] = useState("");
+    const [reportDesc, setReportDesc] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         fetchAlerts();
@@ -99,9 +106,12 @@ export const CommunityAlerts = ({ onBack }: CommunityAlertsProps) => {
     };
 
     const handleReport = async () => {
-        const types = ["Harassment", "Poor Lighting", "Suspicious Activity"];
-        const randomType = types[Math.floor(Math.random() * types.length)];
+        // Obsolete mock function, kept for reference
+    };
 
+    const submitRealReport = async () => {
+        if (!reportType || !reportDesc) return;
+        setIsSubmitting(true);
         toast.loading("Submitting report...", { id: 'report' });
 
         try {
@@ -113,18 +123,31 @@ export const CommunityAlerts = ({ onBack }: CommunityAlertsProps) => {
             const { error } = await supabase
                 .from('alerts')
                 .insert([{
-                    type: randomType,
-                    location_name: "Current Location",
+                    type: reportType,
+                    location_name: "Current Location", // We can use reverse geocoding here later
                     lat: position.coords.latitude,
                     lng: position.coords.longitude,
-                    description: "User reported incident nearby",
+                    description: reportDesc,
+                    upvotes: 0,
+                    comments: 0
                 }]);
 
             if (error) throw error;
             toast.success("Report Submitted", { id: 'report', description: "Your alert has been broadcast to nearby users" });
+
+            // Reset and close modal
+            setReportType("");
+            setReportDesc("");
+            setIsReportOpen(false);
+
+            // Re-fetch to show new alert at the top
+            fetchAlerts();
+
         } catch (error) {
             console.error(error);
             toast.error("Failed to submit report", { id: 'report' });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -140,9 +163,51 @@ export const CommunityAlerts = ({ onBack }: CommunityAlertsProps) => {
                         Community Alerts
                     </h1>
                 </div>
-                <Button size="sm" onClick={handleReport} className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 rounded-full px-4">
-                    <Plus className="w-4 h-4 mr-1" /> Report
-                </Button>
+
+                <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
+                    <DialogTrigger asChild>
+                        <Button size="sm" className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 rounded-full px-4">
+                            <Plus className="w-4 h-4 mr-1" /> Report
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md bg-white dark:bg-card">
+                        <DialogHeader>
+                            <DialogTitle>Report an Incident</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Incident Type</label>
+                                <Select value={reportType} onValueChange={setReportType}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select type" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-card">
+                                        <SelectItem value="Harassment">Harassment</SelectItem>
+                                        <SelectItem value="Poor Lighting">Poor Lighting</SelectItem>
+                                        <SelectItem value="Suspicious Activity">Suspicious Activity</SelectItem>
+                                        <SelectItem value="Safety Hazard">Safety Hazard</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Description</label>
+                                <Textarea
+                                    placeholder="Provide more details about the alert..."
+                                    value={reportDesc}
+                                    onChange={(e) => setReportDesc(e.target.value)}
+                                    className="resize-none h-24 bg-white dark:bg-card"
+                                />
+                            </div>
+                            <Button
+                                onClick={submitRealReport}
+                                disabled={isSubmitting || !reportType || !reportDesc}
+                                className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-primary/90 hover:from-primary/95 hover:to-primary text-white font-bold"
+                            >
+                                {isSubmitting ? "Broadcasting..." : "Broadcast Alert to Network"}
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </header>
 
             {/* Main Content */}

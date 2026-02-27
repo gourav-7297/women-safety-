@@ -120,6 +120,10 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-5%)" },
         },
+        "pulse-glow": {
+          "0%, 100%": { opacity: "1", filter: "brightness(1)", transform: "scale(1)" },
+          "50%": { opacity: "0.8", filter: "brightness(1.2)", transform: "scale(1.05)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -132,6 +136,7 @@ export default {
         float: "float 6s ease-in-out infinite",
         shimmer: "shimmer 3s linear infinite",
         "bounce-gentle": "bounce-gentle 2s infinite",
+        "pulse-glow": "pulse-glow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },
   },

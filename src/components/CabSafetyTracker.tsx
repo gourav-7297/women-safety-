@@ -52,7 +52,7 @@ export const CabSafetyTracker = ({ onBack }: CabSafetyTrackerProps) => {
             const { data, error } = await supabase
                 .from('safety_sessions')
                 .insert([{
-                    type: 'cab_ride',
+                    type: 'cab',
                     destination: destination,
                     vehicle_no: vehicleNo,
                     last_known_lat: position.coords.latitude,

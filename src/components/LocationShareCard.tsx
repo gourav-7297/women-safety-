@@ -49,7 +49,7 @@ export const LocationShareCard = ({ isActive, duration = 30, onToggle }: Locatio
       const { data, error } = await supabase
         .from('safety_sessions')
         .insert([{
-          type: 'general_share',
+          type: 'cab_ride', // Using cab_ride because schema only permits 'cab_ride' or 'walk_companion'
           destination: 'N/A',
           last_known_lat: position.coords.latitude,
           last_known_lng: position.coords.longitude,
@@ -59,7 +59,10 @@ export const LocationShareCard = ({ isActive, duration = 30, onToggle }: Locatio
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("SUPABASE INSERT ERROR DETAILS:", JSON.stringify(error, null, 2));
+        throw error;
+      }
 
       setSessionId(data.id);
 

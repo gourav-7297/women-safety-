@@ -19,6 +19,7 @@ import { AlertHistoryCard } from "@/components/AlertHistoryCard";
 import { useVoiceActivation } from "@/hooks/useVoiceActivation";
 import { useContacts } from "@/hooks/useContacts";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -41,6 +42,7 @@ const Home = () => {
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -69,7 +71,8 @@ const Home = () => {
     });
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
     toast.success("Logged out successfully");
     navigate("/");
   };
@@ -223,9 +226,9 @@ const Home = () => {
         {/* Header */}
         <header className="px-6 pt-12 pb-4 flex items-center justify-between relative z-10">
           <div>
-            <p className="text-muted-foreground font-medium text-sm">{greeting}, Jane</p>
-            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
-              SafeGuard
+            <p className="text-foreground/70 font-bold text-xs tracking-wider uppercase mb-1">{greeting}</p>
+            <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
+              {user?.email?.split('@')[0] || "Guest"}
             </h1>
           </div>
           <div className="flex items-center gap-3">
@@ -290,21 +293,22 @@ const Home = () => {
 
               {/* Quick Actions Grid */}
               <div>
-                <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+                <h3 className="text-[13px] font-extrabold text-foreground/90 uppercase tracking-widest mb-4 flex items-center gap-2">
                   <Zap className="w-4 h-4 text-warning" />
                   Quick Actions
                 </h3>
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-4 gap-x-2 gap-y-6">
                   {quickActions.map((action) => (
                     <button
                       key={action.id}
                       onClick={action.onClick}
-                      className="flex flex-col items-center gap-2 p-2 rounded-2xl transition-all hover:scale-105 active:scale-95 group"
+                      className="flex flex-col items-center gap-2.5 transition-all group"
                     >
-                      <div className={`p-3.5 rounded-2xl bg-gradient-to-br ${action.color} shadow-lg shadow-black/5 group-hover:shadow-black/10 transition-shadow`}>
-                        <action.icon className="w-5 h-5 text-white" />
+                      <div className={`p-4 rounded-[1.25rem] bg-gradient-to-br ${action.color} shadow-lg group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.15)] group-hover:scale-105 active:scale-95 transition-all duration-300 border border-white/20 dark:border-white/10 relative overflow-hidden`}>
+                        <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <action.icon className="w-6 h-6 text-white relative z-10" />
                       </div>
-                      <span className="text-[10px] font-medium text-center leading-tight text-foreground/80">
+                      <span className="text-[11px] font-bold text-center leading-tight text-foreground/80 tracking-wide">
                         {action.label}
                       </span>
                     </button>
@@ -415,8 +419,8 @@ const Home = () => {
                 <div className="w-20 h-20 bg-white/20 rounded-full mx-auto mb-4 flex items-center justify-center backdrop-blur-sm">
                   <User className="w-10 h-10 text-white" />
                 </div>
-                <h2 className="text-xl font-bold">Jane Doe</h2>
-                <p className="text-white/80 text-sm">jane.doe@example.com</p>
+                <h2 className="text-xl font-bold">{user?.email ? user.email.split('@')[0] : "Guest User"}</h2>
+                <p className="text-white/80 text-sm">{user?.email || "Not signed in"}</p>
                 <div className="mt-4 flex justify-center gap-2">
                   <span className="px-3 py-1 bg-white/20 rounded-full text-xs backdrop-blur-sm">O+ Blood</span>
                   <span className="px-3 py-1 bg-white/20 rounded-full text-xs backdrop-blur-sm">No Allergies</span>
@@ -438,8 +442,9 @@ const Home = () => {
         </main>
 
         {/* Bottom Navigation */}
-        <nav className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-t border-border z-50 rounded-t-3xl pb-safe">
-          <div className="flex justify-around items-center px-4 py-3">
+        <nav className="fixed bottom-6 left-6 right-6 glass-nav z-50 rounded-full pb-0 mb-safe premium-shadow border border-white/20 dark:border-white/10 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-white/10 dark:from-white/0 dark:to-white/5 pointer-events-none" />
+          <div className="flex justify-around items-center px-2 py-3 relative z-10">
             {[
               { id: "home", icon: Shield, label: "Home" },
               { id: "contacts", icon: Users, label: "Contacts" },
