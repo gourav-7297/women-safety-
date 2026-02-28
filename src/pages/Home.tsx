@@ -22,6 +22,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 type ViewMode = "home" | "safe-route" | "safety-tips" | "community" | "evidence" | "cab" | "companion";
 type BottomTab = "home" | "contacts" | "activity" | "profile";
@@ -43,6 +45,7 @@ const Home = () => {
   const [newPhone, setNewPhone] = useState("");
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -226,12 +229,27 @@ const Home = () => {
         {/* Header */}
         <header className="px-6 pt-12 pb-4 flex items-center justify-between relative z-10">
           <div>
-            <p className="text-foreground/70 font-bold text-xs tracking-wider uppercase mb-1">{greeting}</p>
+            <p className="text-foreground/70 font-bold text-xs tracking-wider uppercase mb-1">{t(greeting)}</p>
             <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
-              {user?.email?.split('@')[0] || "Guest"}
+              {user?.email?.split('@')[0] || t("Guest")}
             </h1>
           </div>
           <div className="flex items-center gap-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full bg-white dark:bg-card shadow-sm hover:shadow-md transition-all font-bold">
+                  {i18n.language === 'hi' ? 'HI' : 'EN'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => i18n.changeLanguage('en')}>
+                  English
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => i18n.changeLanguage('hi')}>
+                  हिंदी (Hindi)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <ThemeToggle />
             <Button variant="ghost" size="icon" className="rounded-full bg-white dark:bg-card shadow-sm hover:shadow-md transition-all">
               <Bell className="w-5 h-5 text-foreground" />
@@ -262,12 +280,12 @@ const Home = () => {
                   className="p-4 rounded-2xl shadow-sm border transition-all flex flex-col gap-2 bg-white dark:bg-card border-safe/50 hover:border-safe"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Status</span>
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('Status')}</span>
                     <div className="w-2 h-2 rounded-full bg-safe animate-pulse" />
                   </div>
                   <div>
-                    <p className="font-semibold text-foreground leading-tight">Shake On</p>
-                    <p className="text-[10px] text-muted-foreground">Shake to SOS (Global)</p>
+                    <p className="font-semibold text-foreground leading-tight">{t('Shake On')}</p>
+                    <p className="text-[10px] text-muted-foreground">{t('Shake to SOS (Global)')}</p>
                   </div>
                 </div>
 
@@ -279,13 +297,15 @@ const Home = () => {
                     }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className={`text-xs font-bold uppercase tracking-wider ${voiceActivationEnabled ? "text-white/80" : "text-muted-foreground"}`}>Voice</span>
+                    <span className={`text-xs font-bold uppercase tracking-wider ${voiceActivationEnabled ? "text-white/80" : "text-muted-foreground"}`}>
+                      {t('Voice')}
+                    </span>
                     {voiceActivationEnabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
                   </div>
                   <div>
-                    <p className="font-semibold leading-tight">{voiceActivationEnabled ? "Listening..." : "Voice Off"}</p>
+                    <p className="font-semibold leading-tight">{voiceActivationEnabled ? t('Listening...') : t('Voice Off')}</p>
                     <p className={`text-[10px] ${voiceActivationEnabled ? "text-white/80" : "text-muted-foreground"}`}>
-                      Say "Help"
+                      {t('Say "Help"')}
                     </p>
                   </div>
                 </div>
@@ -295,7 +315,7 @@ const Home = () => {
               <div>
                 <h3 className="text-[13px] font-extrabold text-foreground/90 uppercase tracking-widest mb-4 flex items-center gap-2">
                   <Zap className="w-4 h-4 text-warning" />
-                  Quick Actions
+                  {t('Quick Actions')}
                 </h3>
                 <div className="grid grid-cols-4 gap-x-2 gap-y-6">
                   {quickActions.map((action) => (
@@ -309,7 +329,7 @@ const Home = () => {
                         <action.icon className="w-6 h-6 text-white relative z-10" />
                       </div>
                       <span className="text-[11px] font-bold text-center leading-tight text-foreground/80 tracking-wide">
-                        {action.label}
+                        {t(action.label)}
                       </span>
                     </button>
                   ))}
@@ -458,7 +478,7 @@ const Home = () => {
                   }`}
               >
                 <tab.icon className={`w-6 h-6 ${activeTab === tab.id ? "fill-current" : ""}`} />
-                <span className="text-[10px] font-medium">{tab.label}</span>
+                <span className="text-[10px] font-medium">{t(tab.label)}</span>
                 {activeTab === tab.id && (
                   <div className="w-1 h-1 bg-primary rounded-full absolute -bottom-1" />
                 )}

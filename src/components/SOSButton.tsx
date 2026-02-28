@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Shield, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface SOSButtonProps {
   onActivate: () => void;
@@ -9,6 +10,7 @@ interface SOSButtonProps {
 }
 
 export const SOSButton = ({ onActivate, isEmergencyMode }: SOSButtonProps) => {
+  const { t } = useTranslation();
   const [isHolding, setIsHolding] = useState(false);
   const [progress, setProgress] = useState(0);
   const holdTimeoutRef = useRef<NodeJS.Timeout>();
@@ -124,14 +126,14 @@ export const SOSButton = ({ onActivate, isEmergencyMode }: SOSButtonProps) => {
           {isEmergencyMode ? (
             <>
               <AlertCircle className="w-16 h-16" />
-              <span className="text-lg">EMERGENCY</span>
-              <span className="text-sm font-normal">ACTIVE</span>
+              <span className="text-lg">{t('EMERGENCY')}</span>
+              <span className="text-sm font-normal">{t('ACTIVE')}</span>
             </>
           ) : (
             <>
               <Shield className="w-16 h-16" />
-              <span>HOLD</span>
-              <span className="text-sm font-normal">FOR SOS</span>
+              <span>{t('HOLD')}</span>
+              <span className="text-sm font-normal">{t('FOR SOS')}</span>
             </>
           )}
         </Button>
@@ -140,10 +142,10 @@ export const SOSButton = ({ onActivate, isEmergencyMode }: SOSButtonProps) => {
       {!isEmergencyMode && (
         <div className="text-center space-y-1">
           <p className="text-sm font-medium text-muted-foreground">
-            {isHolding ? "Keep holding..." : "Press and hold for 3 seconds"}
+            {isHolding ? t('Keep holding...') : t('Press and hold for 3 seconds')}
           </p>
           <p className="text-xs text-muted-foreground">
-            Triggers emergency alert & location sharing
+            {t('Triggers emergency alert & location sharing')}
           </p>
         </div>
       )}

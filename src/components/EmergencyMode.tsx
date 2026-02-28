@@ -3,12 +3,14 @@ import { MapPin, Phone, Users, X, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "react-i18next";
 
 interface EmergencyModeProps {
   onDeactivate: () => void;
 }
 
 export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
+  const { t } = useTranslation();
   const [countdown, setCountdown] = useState(10);
   const [cancelCode, setCancelCode] = useState("");
   const [showCancelInput, setShowCancelInput] = useState(true);
@@ -44,8 +46,8 @@ export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
           <div className="flex justify-center mb-4">
             <AlertTriangle className="w-24 h-24 animate-pulse" />
           </div>
-          <h1 className="text-4xl font-bold mb-2">EMERGENCY ACTIVE</h1>
-          <p className="text-xl opacity-90">Help is on the way</p>
+          <h1 className="text-4xl font-bold mb-2">{t('EMERGENCY ACTIVE')}</h1>
+          <p className="text-xl opacity-90">{t('Help is on the way')}</p>
         </div>
 
         {/* Countdown & Cancel */}
@@ -54,7 +56,7 @@ export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
             <div className="text-center mb-4">
               <div className="text-6xl font-bold mb-2">{countdown}</div>
               <p className="text-sm opacity-90">
-                Emergency services will be contacted in {countdown} seconds
+                {t('Emergency services will be contacted in')} {countdown} {t('seconds')}
               </p>
             </div>
 
@@ -62,7 +64,7 @@ export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
               <div className="flex gap-2">
                 <Input
                   type="password"
-                  placeholder="Enter cancel code"
+                  placeholder={t('Enter cancel code')}
                   value={cancelCode}
                   onChange={(e) => setCancelCode(e.target.value)}
                   className="bg-white/20 border-white/30 text-white placeholder:text-white/60 text-lg"
@@ -74,11 +76,11 @@ export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
                   size="lg"
                   className="shrink-0"
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
               </div>
               <p className="text-xs text-center opacity-75">
-                Enter your 4-digit code to cancel false alarm
+                {t('Enter your 4-digit code to cancel false alarm')}
               </p>
             </div>
           </Card>
@@ -92,11 +94,11 @@ export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
                 <Phone className="w-6 h-6" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold mb-1">Emergency Services</h3>
+                <h3 className="font-semibold mb-1">{t('Emergency Services')}</h3>
                 <p className="text-sm opacity-90">
                   {showCancelInput
-                    ? "Preparing to call 112..."
-                    : "Connected to 112 • Sending your location"}
+                    ? t('Preparing to call 112...')
+                    : t('Connected to 112 • Sending your location')}
                 </p>
               </div>
               <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
@@ -109,9 +111,9 @@ export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
                 <MapPin className="w-6 h-6" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold mb-1">Live Location Sharing</h3>
+                <h3 className="font-semibold mb-1">{t('Live Location Sharing')}</h3>
                 <p className="text-sm opacity-90">
-                  Broadcasting real-time GPS coordinates
+                  {t('Broadcasting real-time GPS coordinates')}
                 </p>
                 <p className="text-xs opacity-75 mt-1">
                   Lat: 28.6139° N, Long: 77.2090° E
@@ -127,16 +129,16 @@ export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
                 <Users className="w-6 h-6" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold mb-1">Trusted Contacts Notified</h3>
+                <h3 className="font-semibold mb-1">{t('Trusted Contacts Notified')}</h3>
                 <p className="text-sm opacity-90">
-                  3 contacts alerted via SMS & push notification
+                  3 {t('contacts alerted via SMS & push notification')}
                 </p>
                 <div className="flex gap-2 mt-2">
                   <div className="text-xs bg-white/20 px-2 py-1 rounded">
-                    Mom • Delivered
+                    Mom • {t('Delivered')}
                   </div>
                   <div className="text-xs bg-white/20 px-2 py-1 rounded">
-                    Dad • Delivered
+                    Dad • {t('Delivered')}
                   </div>
                 </div>
               </div>
@@ -148,14 +150,14 @@ export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
         {/* Footer message */}
         <div className="mt-6 text-center space-y-4">
           <p className="text-sm opacity-90">
-            Stay calm. Your emergency profile and medical info has been shared.
+            {t('Stay calm. Your emergency profile and medical info has been shared.')}
           </p>
           <Button
             onClick={onDeactivate}
             variant="outline"
             className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20 h-14 text-lg font-semibold backdrop-blur-sm"
           >
-            Cancel Emergency
+            {t('Cancel Emergency')}
           </Button>
         </div>
       </div>
