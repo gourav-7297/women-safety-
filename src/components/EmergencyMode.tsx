@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { MapPin, Phone, Users, X, AlertTriangle } from "lucide-react";
+import { MapPin, Phone, Users, AlertTriangle, VolumeX, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
+import { useSiren } from "@/hooks/useSiren";
 
 interface EmergencyModeProps {
   onDeactivate: () => void;
@@ -11,10 +12,22 @@ interface EmergencyModeProps {
 
 export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
   const { t } = useTranslation();
+  const { playSiren, stopSiren } = useSiren();
   const [countdown, setCountdown] = useState(10);
   const [cancelCode, setCancelCode] = useState("");
   const [showCancelInput, setShowCancelInput] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const CANCEL_CODE = "1234"; // In production, this would be user-set
+
+  // Handle Offline Siren Auto-Play
+  useEffect(() => {
+    if (!isMuted) {
+      playSiren();
+    } else {
+      stopSiren();
+    }
+    return () => stopSiren();
+  }, [isMuted, playSiren, stopSiren]);
 
   useEffect(() => {
     if (countdown > 0 && showCancelInput) {
@@ -28,11 +41,17 @@ export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
 
   const handleCancelAttempt = () => {
     if (cancelCode === CANCEL_CODE) {
+      stopSiren();
       onDeactivate();
     } else {
       setCancelCode("");
       // Show error feedback
     }
+  };
+
+  const handleDeactivateClick = () => {
+    stopSiren();
+    onDeactivate();
   };
 
   return (
@@ -41,13 +60,24 @@ export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
       <div className="absolute inset-0 bg-emergency animate-pulse opacity-20" />
 
       <div className="relative flex-1 flex flex-col p-6 text-emergency-foreground">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <AlertTriangle className="w-24 h-24 animate-pulse" />
+        {/* Header & Mute Button */}
+        <div className="flex justify-between items-start mb-4">
+          <div className="w-10"></div> {/* Spacer for centering */}
+          <div className="text-center">
+            <div className="flex justify-center mb-4">
+              <AlertTriangle className="w-24 h-24 animate-pulse" />
+            </div>
+            <h1 className="text-4xl font-bold mb-2">{t('EMERGENCY ACTIVE')}</h1>
+            <p className="text-xl opacity-90">{t('Help is on the way')}</p>
           </div>
-          <h1 className="text-4xl font-bold mb-2">{t('EMERGENCY ACTIVE')}</h1>
-          <p className="text-xl opacity-90">{t('Help is on the way')}</p>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsMuted(!isMuted)}
+            className="rounded-full bg-white/10 hover:bg-white/20 text-white"
+          >
+            {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6 animate-pulse" />}
+          </Button>
         </div>
 
         {/* Countdown & Cancel */}
@@ -153,7 +183,7 @@ export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
             {t('Stay calm. Your emergency profile and medical info has been shared.')}
           </p>
           <Button
-            onClick={onDeactivate}
+            onClick={handleDeactivateClick}
             variant="outline"
             className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20 h-14 text-lg font-semibold backdrop-blur-sm"
           >
