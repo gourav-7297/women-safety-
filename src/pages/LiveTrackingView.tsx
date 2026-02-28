@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
-import { Shield, AlertTriangle, Clock, MapPin, MapPinOff, Loader2 } from "lucide-react";
+import { Shield, AlertTriangle, Clock, MapPin, MapPinOff, Loader2, ChevronLeft } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { Card } from "@/components/ui/card";
@@ -116,9 +116,9 @@ export const LiveTrackingView = () => {
             <div className="absolute top-0 left-0 right-0 z-50 p-4">
                 <Card className="glass-panel p-4 flex items-center justify-between shadow-xl">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Shield className="w-5 h-5 text-primary" />
-                        </div>
+                        <Link to="/" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                            <ChevronLeft className="w-5 h-5 text-primary" />
+                        </Link>
                         <div>
                             <h1 className="font-bold text-foreground leading-tight">Live Tracker</h1>
                             <p className="text-xs text-muted-foreground">SafeGuard Protection</p>

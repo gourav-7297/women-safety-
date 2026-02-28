@@ -137,8 +137,9 @@ export const CabSafetyTracker = ({ onBack }: CabSafetyTrackerProps) => {
             {/* Header */}
             <header className="px-6 pt-12 pb-4 flex items-center justify-between relative z-10 glass-panel border-b border-border/40 sticky top-0">
                 <div className="flex items-center gap-3">
-                    <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full hover:bg-primary/10">
+                    <Button variant="ghost" onClick={onBack} className="rounded-full hover:bg-primary/10 px-2">
                         <ChevronLeft className="w-6 h-6 text-foreground" />
+                        <span className="font-semibold px-1">Back</span>
                     </Button>
                     <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
                         Cab Safety

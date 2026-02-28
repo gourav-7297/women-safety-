@@ -78,7 +78,7 @@ const AppContent = () => {
   useShakeDetection(handleSOSActivate, {
     isEnabled: true,  // Globally enabled
     threshold: 15,    // Sensitivity
-    timeout: 2000     // Debounce 2s
+    duration: 4000    // Require 4 seconds continuous shake
   });
 
   if (isEmergencyMode) {

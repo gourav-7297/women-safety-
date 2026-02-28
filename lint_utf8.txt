@@ -1,0 +1,55 @@
+﻿
+> vite_react_shadcn_ts@0.0.0 lint
+> eslint .
+
+
+C:\Users\bs511\Downloads\secure-zone-navi-main\src\components\SafeRouteDemo.tsx
+  18:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\bs511\Downloads\secure-zone-navi-main\src\components\ui\badge.tsx
+  29:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\bs511\Downloads\secure-zone-navi-main\src\components\ui\button.tsx
+  47:18  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\bs511\Downloads\secure-zone-navi-main\src\components\ui\command.tsx
+  24:11  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\bs511\Downloads\secure-zone-navi-main\src\components\ui\form.tsx
+  129:10  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\bs511\Downloads\secure-zone-navi-main\src\components\ui\navigation-menu.tsx
+  111:3  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\bs511\Downloads\secure-zone-navi-main\src\components\ui\sidebar.tsx
+  636:3  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\bs511\Downloads\secure-zone-navi-main\src\components\ui\sonner.tsx
+  27:19  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\bs511\Downloads\secure-zone-navi-main\src\components\ui\textarea.tsx
+  5:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\bs511\Downloads\secure-zone-navi-main\src\components\ui\toggle.tsx
+  37:18  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\bs511\Downloads\secure-zone-navi-main\src\contexts\AuthContext.tsx
+  19:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\bs511\Downloads\secure-zone-navi-main\src\hooks\useVoiceActivation.ts
+  118:6  warning  React Hook useEffect has a missing dependency: 'isEnabled'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\bs511\Downloads\secure-zone-navi-main\src\pages\LiveTrackingView.tsx
+  11:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  30:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  53:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\bs511\Downloads\secure-zone-navi-main\src\pages\Login.tsx
+  38:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  54:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\bs511\Downloads\secure-zone-navi-main\tailwind.config.ts
+  143:13  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+Γ£û 18 problems (9 errors, 9 warnings)
+

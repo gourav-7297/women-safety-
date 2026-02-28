@@ -30,8 +30,9 @@ const SafeRouteDemo = ({ onBack }: { onBack: () => void }) => {
       </div>
 
       <div className="flex items-center gap-3 mb-6 relative z-10">
-        <Button variant="ghost" size="icon" onClick={onBack} className="hover:bg-primary/10">
-          <ArrowLeft className="w-5 h-5" />
+        <Button variant="ghost" onClick={onBack} className="hover:bg-primary/10 px-2">
+          <ArrowLeft className="w-5 h-5 mr-1" />
+          <span className="font-semibold text-sm">Back</span>
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent-foreground">Safe Zone Routing</h1>
