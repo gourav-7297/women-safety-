@@ -37,7 +37,7 @@ export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
     <div className="fixed inset-0 bg-emergency z-50 flex flex-col">
       {/* Pulsing background effect */}
       <div className="absolute inset-0 bg-emergency animate-pulse opacity-20" />
-      
+
       <div className="relative flex-1 flex flex-col p-6 text-emergency-foreground">
         {/* Header */}
         <div className="text-center mb-8">
@@ -57,7 +57,7 @@ export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
                 Emergency services will be contacted in {countdown} seconds
               </p>
             </div>
-            
+
             <div className="space-y-3">
               <div className="flex gap-2">
                 <Input
@@ -94,8 +94,8 @@ export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">Emergency Services</h3>
                 <p className="text-sm opacity-90">
-                  {showCancelInput 
-                    ? "Preparing to call 112..." 
+                  {showCancelInput
+                    ? "Preparing to call 112..."
                     : "Connected to 112 • Sending your location"}
                 </p>
               </div>
@@ -146,10 +146,17 @@ export const EmergencyMode = ({ onDeactivate }: EmergencyModeProps) => {
         </div>
 
         {/* Footer message */}
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-y-4">
           <p className="text-sm opacity-90">
             Stay calm. Your emergency profile and medical info has been shared.
           </p>
+          <Button
+            onClick={onDeactivate}
+            variant="outline"
+            className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20 h-14 text-lg font-semibold backdrop-blur-sm"
+          >
+            Cancel Emergency
+          </Button>
         </div>
       </div>
     </div>
