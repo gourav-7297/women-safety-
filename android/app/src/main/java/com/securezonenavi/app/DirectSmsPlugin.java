@@ -16,7 +16,15 @@ import org.json.JSONException;
 
 import java.util.ArrayList;
 
-@CapacitorPlugin(name = "DirectSms")
+@CapacitorPlugin(
+    name = "DirectSms",
+    permissions = {
+        @com.getcapacitor.annotation.Permission(
+            alias = "sms",
+            strings = {Manifest.permission.SEND_SMS}
+        )
+    }
+)
 public class DirectSmsPlugin extends Plugin {
 
     @PluginMethod
